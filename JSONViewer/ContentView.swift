@@ -8,14 +8,33 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var rootNode: JSONNode?
+    @State private var searchText: String = ""
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationView {
+            if let rootNode = rootNode {
+                ScrollView(.vertical) {
+                    JSONNodeView(node: rootNode, searchText: searchText)
+                        .padding()
+                }
+                .searchable(text: $searchText)
+                .onChange(of: searchText, { _, newValue in
+                    rootNode.updateVisibility(for: newValue)
+                })
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .navigationBarTitle("Visualizador de JSON", displayMode: .inline)
+            } else {
+                ProgressView("Cargando JSON...")
+                    .onAppear {
+                        if let loadedJSON = loadLocalJSON(fileName: "sample") {
+                            self.rootNode = JSONNode(value: loadedJSON)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
-        .padding()
+        .navigationViewStyle(StackNavigationViewStyle())
     }
 }
 
